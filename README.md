@@ -1,2 +1,2 @@
-# lambda-hat
+# $\hat{\lambda}$
 Lambda Interpreter 

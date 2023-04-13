@@ -5,7 +5,6 @@ class Expression:
     """ <expression> = <name> | <function> | <application>"""
     def __init__(self):
         pass
-
     # def evaluate(self):
     #     """Apply the lambda expression to the argument"""
     #     return 0
@@ -24,33 +23,29 @@ class Expression:
             return "<name>"
         else: 
             return "<expression>"
+        
+    def get_function(self, s):
+        (start_index, end_index) = helper.get_parentheses_indexes(s)
+        function = s[start_index+1:end_index]
+        return Function(function)
+
+    def get_expression(self, s):
+        if s[0] == '(':
+            (start_index, end_index) = helper.get_parentheses_indexes(s)
+            expression = ""
+            for i in range(len(s)):
+                if not (i > start_index-1 and i < end_index + 1):
+                    expression += s[i]
+        else:
+            expression = s
+        return helper.get_grammar_type(expression)
 
 class Application(Expression):
     """ <application> = ((<function>)<expression>)"""
     def __init__(self,s):
+        
         self.function = self.get_function(s)
         self.expression = self.get_expression(s)
-   
-    def get_function(self, s):
-        (start_index, end_index) = self.get_parentheses_indexes(s)
-        function = s[start_index+1:end_index]
-        return Function(function)
-   
-    def get_parentheses_indexes(self, s):
-        for i in range(len(s)):
-            if s[i] == ")":
-                for j in range(i, -1, -1):
-                    if s[j] == "(":
-                        return (j, i)
-                  
-    def get_expression(self, s):
-        (start_index, end_index) = self.get_parentheses_indexes(s)
-        expression = ""
-        for i in range(len(s)):
-            if not (i > start_index-1 and i < end_index + 1):
-                expression += s[i]
-        return helper.get_grammar_type(expression)
-
       
     def evaluate(self, s=""):
         evaluated = self.expression.evaluate()
@@ -60,8 +55,8 @@ class Function(Expression) :
     """ <function> = ($<name>.<expression>)"""
     def __init__(self,s):
         self.function = s
-        self.name = self.splice_function()[0]
-        self.expression = self.splice_function()[1]
+        self.name = Name(self.splice_function()[0])
+        self.expression = self.get_expression(self.splice_function()[1])
 
     def splice_function(self):
         """Splices the function into a list of [name, expression]"""
@@ -70,21 +65,14 @@ class Function(Expression) :
         expression = self.function[full_stop_index+1: len(self.function)]
 
         return [name,expression]
-
-    # def evaluate(self):
-    #     # # ($x.x)
-    #     # name => expression, return x
-    #     # # ($x.x x)
-    #     # name => expression, return x x
-    #     return self.expression
     
     def evaluate(self, s = ""):
         if s == "":
             return self.function
         
-        if self.expression == self.name:
-            return self.expression.replace(self.name, s)
-        return self.expression
+        if isinstance(self.expression, Name) and self.name == self.expression.name:
+            return self.function.replace(self.name, s)
+        return self.expression.evaluate(s)
 
 class Name(Expression) :
     """ <name> = [a-z] +"""

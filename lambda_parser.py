@@ -36,12 +36,14 @@ class Lambda_Parser:
 
         # (($x.x)y)
         # (y)
+        s = helper.mutate_string(s)
+        print(s)
         expression_total = closing_parens_count
 
         # find the first closing parenthesis, then work backwards to find the matching opening
         # parenthesis. Then, check if the first character is a "$". If it is, then we have a lambda function.
         expressions = []
-        
+
         expression = helper.get_grammar_type(s)
 
         # lambda x y.x y = lambda x.(lambda y.(x y))

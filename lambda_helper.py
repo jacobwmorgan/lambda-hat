@@ -70,12 +70,27 @@ def is_application(s):
     return False  # terry davis told me to put this here
     # gödel moment :)
 
-def get_parentheses_indexes(self, s):
+def get_parentheses_indexes(s):
     for i in range(len(s)):
         if s[i] == ")":
             for j in range(i, -1, -1):
                 if s[j] == "(":
                     return (j, i)
+
+def get_parentheses_at_index(s, start_index_skip, end_index_skip):
+    start_paren_index = -1
+    end_paren_index = -1
+    # average unity developer
+    for i in range(len(s)):
+        if s[i] == ")":  # into the void
+            end_paren_index += 1
+            if end_paren_index == end_index_skip:
+                for j in range(i, -1, -1):
+                    if s[j] == "(":
+                        start_paren_index += 1
+                        if start_paren_index == start_index_skip:
+                            return (j, i)
+    return (0, len(s))
 
 def remove_outer_parentheses(s):
     if s[0] == '(' and s[len(s)-1] == ')':
@@ -85,9 +100,54 @@ def remove_outer_parentheses(s):
 def is_name(s):
     print(f"Called is_name with string {s}")
     if s[0] == '(' and s[len(s)-1] == ')':
-        return s[1: len(s)-1].isalpha()
+        return s[1: len(s)-1].replace(" ", "").isalpha()
     return s.isalpha()
- 
- def mutate_string(s):
+
+
+def mutate_string(s):
+    # (($x.x)y)
+    # ($x.x)y
+    functions = []
+    used_indexes = []
+    start_skip = 0
+    for i in range (s.count('(')):
+        (start_index, end_index) = get_parentheses_at_index(s, start_skip, i)
+        if start_index in used_indexes or end_index in used_indexes:
+            continue
+        if s[start_index+1] != '$':
+            start_skip += 1
+            continue
+
+        used_indexes.append(start_index)
+        used_indexes.append(end_index)
+        functions.append(s[start_index+1:end_index])
+
+    print(functions)
+    new_functions = []
+    for func in functions:
+        names = func[func.index("$") + 1: func.index(".")].split(" ")
+        returns = func[func.index(".")+1 : len(func)]
+        new_string = "("
+        # We only want to actually change it if there's more than one name in this function
+        if len(names) > 1:
+            for name in names:
+                new_string += f"${name}.("
+            new_string += f"{returns}"
+            new_string += ")" * len(names)
+            new_functions.append(new_string)
+        else:
+            new_functions.append("(" + func + ")")
+
+    s = "("
+    for new_func in new_functions:
+        s += new_func
+    s += ")"
+
+    return s
     # lambda x y.x y = lambda x.(lambda y.(x y))
-    # ($x y. xy) => ($x.($y.(x y)))
+    #  $x y z
+    # ($x y. x y) => ($x.($y.(x y)))
+    # (function1[function2 -> ])
+   
+   # "x" : function_nest["y"]
+   # "y" : (x  y)

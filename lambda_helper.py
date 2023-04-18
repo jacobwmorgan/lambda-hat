@@ -2,7 +2,6 @@
 import grammar as g
 
 def get_grammar_type(s):
-    print(f"Called get_grammar_type with string {s}")
     no_paren = remove_outer_parentheses(s)
     grammar_type = None
     if is_function(no_paren):
@@ -14,7 +13,6 @@ def get_grammar_type(s):
     return grammar_type
 
 def is_expression(s):
-    #print(f"Called is_expression with string {s}")
     no_paren= remove_outer_parentheses(s)
     if not is_function(no_paren) and not is_application(no_paren) and not is_name(no_paren):
         return False
@@ -23,7 +21,6 @@ def is_expression(s):
 
 def is_function(s):
     # <function> = ($<name>.<expression>)
-    #print(f"Called is_function with string {s}")
     starts_with_lambda= s[0] == '$'
     if not starts_with_lambda:
         return False
@@ -46,9 +43,6 @@ def is_function(s):
 
 def is_application(s):
     # <application> = (<function><expression>)
-    # (($x.x)y)
-    # (($x.x)($x.x))
-    #print(f"Called is_application with string {s}")
     # can't be an application without at least a $ and a . so therefore anything less than 2 isn't an application.
     if len(s) <= 2 or '$' not in s or '.' not in s:
         return False
@@ -67,7 +61,6 @@ def is_application(s):
         return False
 
     return True
-    return False  # terry davis told me to put this here
     # gödel moment :)
 
 def get_parentheses_indexes(s):
@@ -78,18 +71,15 @@ def get_parentheses_indexes(s):
                     return (j, i)
 
 def get_parentheses_at_index(s, index_skip):
-    start_paren_index = -1
     end_paren_index = -1
     # average unity developer
     for i in range(len(s)):
-        if s[i] == ")":  # into the void
+        if s[i] == ")":
             end_paren_index += 1
             if end_paren_index == index_skip:
                 for j in range(i, -1, -1):
                     if s[j] == "(":
-                        # start_paren_index += 1
-                        # if start_paren_index == index_skip:
-                            return (j, i)
+                        return (j, i)
     return (0, len(s))
 
 def remove_outer_parentheses(s):
@@ -99,15 +89,11 @@ def remove_outer_parentheses(s):
 
 def is_name(s):
     no_spaces = s.replace(" ", "")
-    #print(f"Called is_name with string {s}")
-    #if s[0] == '(' and s[len(s)-1] == ')':
-    #    return s[1: len(s)-1].replace(" ", "").isalpha()
     return no_spaces.isalpha()
 
 
 def beta_reduction(s):
     expressions = get_expressions_from_string(s)
-
     new_expressions = []
     # Lambda functions with multiple names are perfectly valid! However,
     # in their regular input form we cannot evaluate them, so we need to 

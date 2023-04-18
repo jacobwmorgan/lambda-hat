@@ -20,15 +20,13 @@ class Lambda_Parser:
         # Check if amount of opening and closing parentheses match
         opening_parens_count = s.count("(")
         closing_parens_count = s.count(")")
-        print(opening_parens_count, closing_parens_count)
         if opening_parens_count != closing_parens_count:
             raise ValueError("Mismatched number of parentheses.")
        
         s = helper.beta_reduction(s)
-        print(f"beta reduced {s}")
         expression = helper.get_grammar_type(s)
         print (expression.evaluate().replace("$", "λ"))
         return s
- 
+
     def get_parse_input(self):
         return self.lambda_expression

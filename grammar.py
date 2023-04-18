@@ -5,16 +5,12 @@ class Expression:
     """ <expression> = <name> | <function> | <application>"""
     def __init__(self):
         pass
-    # def evaluate(self):
-    #     """Apply the lambda expression to the argument"""
-    #     return 0
 
     def evaluate(self, s = ""):
-        return "balls"
+        return "error: unimplemented evaluate function"
 
     def return_type(self):
         """Returns the type of the expression."""
-        # (($x.x)($x.x))
         if isinstance(self, Application):
             return "<application>"
         elif isinstance(self, Function):
@@ -23,7 +19,7 @@ class Expression:
             return "<name>"
         else: 
             return "<expression>"
-        
+       
     def get_function(self, s):
         (start_index, end_index) = helper.get_parentheses_indexes(s)
         function = s[start_index+1:end_index]
@@ -43,7 +39,6 @@ class Expression:
 class Application(Expression):
     """ <application> = ((<function>)<expression>)"""
     def __init__(self,s):
-        
         self.function = self.get_function(s)
         self.expression = self.get_expression(s)
       
@@ -55,8 +50,9 @@ class Function(Expression) :
     """ <function> = ($<name>.<expression>)"""
     def __init__(self,s):
         self.function = s
-        self.name = Name(self.splice_function()[0])
-        self.expression = self.get_expression(self.splice_function()[1])
+        (name, expression) = self.splice_function()
+        self.name = Name(name)
+        self.expression = self.get_expression(expression)
 
     def splice_function(self):
         """Splices the function into a list of [name, expression]"""
@@ -69,9 +65,8 @@ class Function(Expression) :
     def evaluate(self, s = ""):
         if s == "":
             return self.function
-        
-        if isinstance(self.expression, Name) and self.name == self.expression.name:
-            return self.function.replace(self.name, s)
+        if isinstance(self.expression, Name) and self.name.name == self.expression.name:
+            return s
         return self.expression.evaluate(s)
 
 class Name(Expression) :

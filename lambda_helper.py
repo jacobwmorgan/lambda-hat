@@ -14,7 +14,7 @@ def get_grammar_type(s):
     return grammar_type
 
 def is_expression(s):
-    print(f"Called is_expression with string {s}")
+    #print(f"Called is_expression with string {s}")
     no_paren= remove_outer_parentheses(s)
     if not is_function(no_paren) and not is_application(no_paren) and not is_name(no_paren):
         return False
@@ -23,7 +23,7 @@ def is_expression(s):
 
 def is_function(s):
     # <function> = ($<name>.<expression>)
-    print(f"Called is_function with string {s}")
+    #print(f"Called is_function with string {s}")
     starts_with_lambda= s[0] == '$'
     if not starts_with_lambda:
         return False
@@ -48,9 +48,9 @@ def is_application(s):
     # <application> = (<function><expression>)
     # (($x.x)y)
     # (($x.x)($x.x))
-    print(f"Called is_application with string {s}")
+    #print(f"Called is_application with string {s}")
     # can't be an application without at least a $ and a . so therefore anything less than 2 isn't an application.
-    if len(s) <= 2:
+    if len(s) <= 2 or '$' not in s or '.' not in s:
         return False
     # split string at first closing parenthesis, remove that set of parenthesis and then get expression on the rest
     (start_index, end_index) = get_parentheses_indexes(s)
@@ -77,18 +77,18 @@ def get_parentheses_indexes(s):
                 if s[j] == "(":
                     return (j, i)
 
-def get_parentheses_at_index(s, start_index_skip, end_index_skip):
+def get_parentheses_at_index(s, index_skip):
     start_paren_index = -1
     end_paren_index = -1
     # average unity developer
     for i in range(len(s)):
         if s[i] == ")":  # into the void
             end_paren_index += 1
-            if end_paren_index == end_index_skip:
+            if end_paren_index == index_skip:
                 for j in range(i, -1, -1):
                     if s[j] == "(":
-                        start_paren_index += 1
-                        if start_paren_index == start_index_skip:
+                        # start_paren_index += 1
+                        # if start_paren_index == index_skip:
                             return (j, i)
     return (0, len(s))
 
@@ -98,56 +98,61 @@ def remove_outer_parentheses(s):
     return s
 
 def is_name(s):
-    print(f"Called is_name with string {s}")
-    if s[0] == '(' and s[len(s)-1] == ')':
-        return s[1: len(s)-1].replace(" ", "").isalpha()
-    return s.isalpha()
+    no_spaces = s.replace(" ", "")
+    #print(f"Called is_name with string {s}")
+    #if s[0] == '(' and s[len(s)-1] == ')':
+    #    return s[1: len(s)-1].replace(" ", "").isalpha()
+    return no_spaces.isalpha()
 
 
-def mutate_string(s):
-    # (($x.x)y)
-    # ($x.x)y
-    functions = []
-    used_indexes = []
-    start_skip = 0
-    for i in range (s.count('(')):
-        (start_index, end_index) = get_parentheses_at_index(s, start_skip, i)
-        if start_index in used_indexes or end_index in used_indexes:
-            continue
-        if s[start_index+1] != '$':
-            start_skip += 1
-            continue
+def beta_reduction(s):
+    expressions = get_expressions_from_string(s)
 
-        used_indexes.append(start_index)
-        used_indexes.append(end_index)
-        functions.append(s[start_index+1:end_index])
-
-    print(functions)
-    new_functions = []
-    for func in functions:
-        names = func[func.index("$") + 1: func.index(".")].split(" ")
-        returns = func[func.index(".")+1 : len(func)]
-        new_string = "("
-        # We only want to actually change it if there's more than one name in this function
-        if len(names) > 1:
-            for name in names:
-                new_string += f"${name}.("
-            new_string += f"{returns}"
-            new_string += ")" * len(names)
-            new_functions.append(new_string)
+    new_expressions = []
+    # Lambda functions with multiple names are perfectly valid! However,
+    # in their regular input form we cannot evaluate them, so we need to 
+    # calculate if there is multiple names in a given lambda function,
+    # and if there is, split it up into a lambda evaluatable format.
+    for exp in expressions:
+        if "$" in exp:
+            # This is a lambda function, evaluate if we need to change it
+            names = exp[exp.index("$") + 1: exp.index(".")].split(" ")
+            returns = exp[exp.index(".")+1 : len(exp)]
+            new_string = "("
+            # We only want to actually change it if there's more than one name in this function
+            if len(names) > 1:
+                for name in names:
+                    new_string += f"${name}.("
+                new_string += f"{returns}"
+                new_string += ")" * (len(names) + 1)
+                new_expressions.append(new_string)
+            else:
+                # It's a function, it needs to be encased in parentheses
+                new_expressions.append("(" + exp + ")")
         else:
-            new_functions.append("(" + func + ")")
+            # This expression was just a name, no need to encase
+            new_expressions.append(exp)
 
-    s = "("
-    for new_func in new_functions:
-        s += new_func
-    s += ")"
+    # Construct our new string!
+    s = ""
+    for new_exp in new_expressions:
+        s += new_exp
+    
+    # If we end on a name or have multiple expressions,
+    # encase the whole return string in parentheses
+    if s[len(s) -1].isalpha() or len(expressions) > 1:
+        s = "(" + s + ")"
 
     return s
-    # lambda x y.x y = lambda x.(lambda y.(x y))
-    #  $x y z
-    # ($x y. x y) => ($x.($y.(x y)))
-    # (function1[function2 -> ])
-   
-   # "x" : function_nest["y"]
-   # "y" : (x  y)
+
+def get_expressions_from_string(s):
+    expressions = []
+    min_index = 0
+    for i in range(s.count('(')):
+        (start_index, end_index) = get_parentheses_at_index(s, i)
+        if start_index < min_index:
+            start_index = min_index
+        expression = s[start_index+1:end_index]
+        expressions.append(expression)
+        min_index = end_index
+    return expressions

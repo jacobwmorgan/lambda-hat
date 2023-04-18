@@ -23,7 +23,7 @@ class Lambda_Parser:
         if opening_parens_count != closing_parens_count:
             raise ValueError("Mismatched number of parentheses.")
        
-        s = helper.beta_reduction(s)
+        s = helper.syntax_sugaring(s)
         expression = helper.get_grammar_type(s)
         print (expression.evaluate().replace("$", "λ"))
         return s

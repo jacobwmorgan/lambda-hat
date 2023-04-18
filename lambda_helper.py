@@ -92,7 +92,7 @@ def is_name(s):
     return no_spaces.isalpha()
 
 
-def beta_reduction(s):
+def syntax_sugaring(s):
     expressions = get_expressions_from_string(s)
     new_expressions = []
     # Lambda functions with multiple names are perfectly valid! However,

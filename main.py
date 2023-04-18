@@ -1,4 +1,3 @@
-
 from lambda_parser import Lambda_Parser
 from grammar import Function, Application
 import lambda_helper as helper

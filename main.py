@@ -4,7 +4,7 @@ import lambda_helper as helper
 
 
 if __name__ == "__main__":
-    print("Welcome to Lamda Hat. <:)")
+    print("Welcome to Lambda Hat. <:)")
     parser = Lambda_Parser()
 
     while True:
